@@ -1,6 +1,6 @@
 {
   "name": "overlaylist",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Lightweight local network tool for managing OBS overlay notes with live updates.",
   "main": "server.js",
   "scripts": {

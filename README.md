@@ -20,7 +20,6 @@ OverlayList ist ein plattformübergreifendes, ressourcenschonendes Node.js-Tool 
 
 ```bash
 npm install
-cp .env.example .env 2>/dev/null || true
 node server.js
 ```
 

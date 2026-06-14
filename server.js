@@ -19,6 +19,10 @@ app.use(express.json());
 app.use(express.static(PUBLIC_DIR));
 app.use('/locales', express.static(path.join(PUBLIC_DIR, 'locales')));
 
+app.get('/', (_req, res) => {
+  res.redirect('/dashboard.html');
+});
+
 const ensureDataFile = () => {
   if (!fs.existsSync(DATA_FILE)) {
     fs.writeFileSync(DATA_FILE, '[]', 'utf-8');
@@ -92,7 +96,7 @@ app.patch('/api/entries/:id', (req, res) => {
   writeEntries(entries);
   broadcastEntries();
 
-  return res.json(entries[entryIndex]);
+  return res.json(entries.find((entry) => entry.id === id));
 });
 
 io.on('connection', (socket) => {

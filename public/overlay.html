@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OverlayList Overlay</title>
+  <style>
+    :root {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .overlay {
+      padding: 20px;
+      width: 100vw;
+    }
+
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+      max-width: 720px;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: rgba(7, 10, 17, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      backdrop-filter: blur(8px);
+      font-size: 24px;
+      line-height: 1.4;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .item.completed {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+
+    .item::before {
+      content: '•';
+      color: #68d391;
+      font-size: 30px;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <main class="overlay">
+    <ul id="overlayList" class="list"></ul>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const overlayList = document.getElementById('overlayList');
+    const socket = io();
+
+    const renderEntries = (entries) => {
+      overlayList.innerHTML = '';
+
+      entries.forEach((entry) => {
+        const item = document.createElement('li');
+        item.className = `item${entry.isCompleted ? ' completed' : ''}`;
+        item.textContent = entry.text;
+        overlayList.appendChild(item);
+      });
+    };
+
+    socket.on('entries:update', (entries) => {
+      renderEntries(Array.isArray(entries) ? entries : []);
+    });
+  </script>
+</body>
+</html>

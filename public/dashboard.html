@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OverlayList Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+      --bg: #10131c;
+      --panel: rgba(19, 24, 37, 0.92);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --accent: #68d391;
+      --accent-hover: #48bb78;
+      --text: #f7fafc;
+      --muted: #a0aec0;
+      --danger: #fc8181;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1b2233, var(--bg));
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .app {
+      width: min(100%, 760px);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(14px);
+    }
+
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 8px;
+      max-width: 42ch;
+      line-height: 1.5;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+    }
+
+    .status.connected::before {
+      background: var(--accent);
+    }
+
+    label,
+    select,
+    input,
+    button {
+      font: inherit;
+    }
+
+    .language-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+    }
+
+    select,
+    input {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: var(--accent);
+      color: #0b1020;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .entry {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .entry span {
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .entry.completed span {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      padding: 20px 0 8px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .composer {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div>
+        <h1 data-i18n="appTitle">OverlayList Dashboard</h1>
+        <p class="subtitle" data-i18n="appSubtitle">Verwalte Notizen für dein OBS-Overlay in Echtzeit.</p>
+      </div>
+      <div class="toolbar">
+        <div id="connectionStatus" class="status" data-i18n-status>Verbinde…</div>
+        <div class="language-switcher">
+          <label for="languageSelect" data-i18n="languageLabel">Sprache</label>
+          <select id="languageSelect">
+            <option value="de">DE</option>
+            <option value="en">EN</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <section class="composer">
+      <input id="entryInput" type="text" maxlength="280" autocomplete="off" data-i18n-placeholder="inputPlaceholder" placeholder="Neue Notiz eingeben">
+      <button id="addButton" type="button" data-i18n="addButton">Hinzufügen</button>
+    </section>
+
+    <section>
+      <h2 data-i18n="listTitle">Aktive Notizen</h2>
+      <div id="emptyState" class="empty-state" data-i18n="emptyState">Noch keine Notizen vorhanden.</div>
+      <ul id="entriesList"></ul>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const storageKey = 'overlaylist-language';
+    const languageSelect = document.getElementById('languageSelect');
+    const entryInput = document.getElementById('entryInput');
+    const addButton = document.getElementById('addButton');
+    const entriesList = document.getElementById('entriesList');
+    const emptyState = document.getElementById('emptyState');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const socket = io();
+
+    let entries = [];
+    let translations = {};
+
+    const getPreferredLanguage = () => {
+      const stored = localStorage.getItem(storageKey);
+      return stored === 'en' ? 'en' : 'de';
+    };
+
+    const setStatus = (state) => {
+      connectionStatus.classList.toggle('connected', state === 'connected');
+      const key = state === 'connected' ? 'statusConnected' : state === 'disconnected' ? 'statusDisconnected' : 'statusConnecting';
+      connectionStatus.textContent = translations[key] || '';
+    };
+
+    const applyTranslations = () => {
+      document.documentElement.lang = languageSelect.value;
+      document.querySelectorAll('[data-i18n]').forEach((element) => {
+        const key = element.dataset.i18n;
+        element.textContent = translations[key] || key;
+      });
+
+      document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
+        const key = element.dataset.i18nPlaceholder;
+        element.setAttribute('placeholder', translations[key] || key);
+      });
+
+      setStatus(socket.connected ? 'connected' : 'connecting');
+      renderEntries();
+    };
+
+    const loadTranslations = async (language) => {
+      const response = await fetch(`/locales/${language}.json`);
+      translations = await response.json();
+      localStorage.setItem(storageKey, language);
+      applyTranslations();
+    };
+
+    const renderEntries = () => {
+      entriesList.innerHTML = '';
+      emptyState.hidden = entries.length > 0;
+
+      entries.forEach((entry) => {
+        const item = document.createElement('li');
+        item.className = `entry${entry.isCompleted ? ' completed' : ''}`;
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = entry.isCompleted;
+        checkbox.setAttribute('aria-label', translations.toggleLabel || 'Toggle');
+        checkbox.addEventListener('change', () => {
+          socket.emit('entry:toggle', { id: entry.id, isCompleted: checkbox.checked });
+        });
+
+        const text = document.createElement('span');
+        text.textContent = entry.text;
+
+        item.append(checkbox, text);
+        entriesList.appendChild(item);
+      });
+    };
+
+    const addEntry = () => {
+      const text = entryInput.value.trim();
+      if (!text) {
+        return;
+      }
+
+      socket.emit('entry:add', { text }, (result) => {
+        if (result?.ok) {
+          entryInput.value = '';
+          entryInput.focus();
+        }
+      });
+    };
+
+    addButton.addEventListener('click', addEntry);
+    entryInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        addEntry();
+      }
+    });
+
+    languageSelect.addEventListener('change', () => {
+      loadTranslations(languageSelect.value);
+    });
+
+    socket.on('connect', () => setStatus('connected'));
+    socket.on('disconnect', () => setStatus('disconnected'));
+    socket.on('entries:update', (nextEntries) => {
+      entries = Array.isArray(nextEntries) ? nextEntries : [];
+      renderEntries();
+    });
+
+    languageSelect.value = getPreferredLanguage();
+    loadTranslations(languageSelect.value).catch(() => {
+      translations = {};
+      applyTranslations();
+    });
+  </script>
+</body>
+</html>

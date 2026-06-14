@@ -1,0 +1,24 @@
+{
+  "name": "overlaylist",
+  "version": "0.1.0",
+  "description": "Lightweight local network tool for managing OBS overlay notes with live updates.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js"
+  },
+  "keywords": [
+    "obs",
+    "overlay",
+    "socket.io",
+    "notes",
+    "streaming"
+  ],
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "socket.io": "4.8.3"
+  }
+}

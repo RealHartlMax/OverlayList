@@ -1,0 +1,13 @@
+{
+  "appTitle": "OverlayList Dashboard",
+  "appSubtitle": "Verwalte Notizen für dein OBS-Overlay in Echtzeit.",
+  "languageLabel": "Sprache",
+  "inputPlaceholder": "Neue Notiz eingeben",
+  "addButton": "Hinzufügen",
+  "listTitle": "Aktive Notizen",
+  "emptyState": "Noch keine Notizen vorhanden.",
+  "statusConnected": "Verbunden",
+  "statusConnecting": "Verbinde…",
+  "statusDisconnected": "Getrennt",
+  "toggleLabel": "Erledigt markieren"
+}

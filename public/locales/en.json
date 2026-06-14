@@ -1,0 +1,13 @@
+{
+  "appTitle": "OverlayList Dashboard",
+  "appSubtitle": "Manage notes for your OBS overlay in real time.",
+  "languageLabel": "Language",
+  "inputPlaceholder": "Enter a new note",
+  "addButton": "Add",
+  "listTitle": "Active notes",
+  "emptyState": "No notes yet.",
+  "statusConnected": "Connected",
+  "statusConnecting": "Connecting…",
+  "statusDisconnected": "Disconnected",
+  "toggleLabel": "Mark as completed"
+}
